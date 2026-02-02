@@ -168,6 +168,10 @@ function sectionSetup(element){
             tag = document.createElement('ul')
             break;
         }
+        case "video":{
+            tag = document.createElement('iframe')
+            break;
+        }
         default:{
             tag = document.createElement('div')
             break;
@@ -193,15 +197,43 @@ function sectionSetup(element){
             break;
         }
     }
-    if(!(tag.tagName == 'OL' || tag.tagName == "UL")){
+    if(!(tag.tagName == 'OL' || tag.tagName == "UL" || tag.tagName == "IFRAME")){
             element.children.forEach((child)=>{
-            tag.append(createText(child))
+            if(child.type == "image"){
+                tag.append(createImage(child))
+            }else{
+                tag.append(createText(child))
+            }
         })
     }
     if(tag.tagName == 'OL' || tag.tagName == "UL"){
             element.children.forEach((listItem)=>{
                 tag.append(createList(listItem))
             })
+    }
+   if(tag.tagName === 'IFRAME'){
+        // Generate the Privacy URL
+        const embedUrl = getEmbedUrl(element.url);
+        
+        // Debugging: Check your console to see exactly what URL is generated
+        console.log("Generating Video URL:", embedUrl);
+
+        tag.setAttribute('src', embedUrl);
+        tag.setAttribute('width', '100%'); // Force full width of container
+        tag.setAttribute('height', '400'); // Slightly taller for better visibility
+        tag.setAttribute('title', 'Video player');
+        tag.setAttribute('frameborder', '0');
+        
+        // Simplified permissions to stop Console Warnings
+        tag.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+        tag.setAttribute('allowfullscreen', ''); 
+        
+        // CSS Styling to ensure it's visible
+        tag.style.display = "block";
+        tag.style.maxWidth = "100%";
+        tag.style.margin = "20px auto"; // Center it with spacing
+        
+        return tag; // Return early so we don't append text children to iframe
     }
 
     return tag
@@ -228,6 +260,76 @@ function createText(child){
     return text
 }
 
+function createImage(child){
+    let imgContainer = document.createElement('div')
+    imgContainer.style.width = "100%"
+    imgContainer.style.height = "max-content"
+    imgContainer.style.display = "flex"
+    imgContainer.style.alignItems = "center"
+    switch(child.align){
+        case "center":
+            imgContainer.style.justifyContent = "center"
+            break;
+        case "right":
+            imgContainer.style.justifyContent = "end"
+            break;
+        default:
+            imgContainer.style.justifyContent = "start"
+            break;
+    }
+    let imgUrl = child.url
+    let img = document.createElement('img')
+    img.src = imgUrl
+    img.style.width = child.width
+    // img.style.align = child.align
+    imgContainer.append(img)
+
+    return imgContainer
+}
+
+function getEmbedUrl(stringUrl) {
+    try {
+        const url = new URL(stringUrl);
+        let videoId = "";
+
+        // 1. Handle "youtu.be" (Short links)
+        if (url.hostname.includes("youtu.be")) {
+            videoId = url.pathname.slice(1);
+        }
+        // 2. Handle "youtube.com" (Standard links)
+        else if (url.hostname.includes("youtube.com") && url.searchParams.has("v")) {
+            videoId = url.searchParams.get("v");
+        }
+        // 3. Handle existing embed links
+        else if (url.pathname.includes("/embed/")) {
+            // Switch standard embed to nocookie embed
+            return stringUrl.replace("youtube.com", "youtube-nocookie.com");
+        }
+
+        // Return the clean privacy-friendly URL
+        if (videoId) {
+            return `https://www.youtube-nocookie.com/embed/${videoId}`;
+        }
+    } catch (error) {
+        console.error("URL parsing failed:", stringUrl);
+    }
+    
+    return stringUrl;
+}
+// function createVideo(tag,element){
+
+//     tag.setAttribute('width', '560');
+//     tag.setAttribute('height', '315');
+//     tag.setAttribute('src', element.url);
+//     tag.setAttribute('title', 'YouTube video player');
+//     tag.setAttribute('frameborder', '0');
+//     tag.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+//     tag.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+//     tag.setAttribute('allowfullscreen', ''); 
+
+//     return tag
+
+// }
 function createList(listItem){
     let li = document.createElement('li')
 
