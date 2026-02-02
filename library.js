@@ -264,8 +264,8 @@ function createImage(child){
     let imgContainer = document.createElement('div')
     imgContainer.style.width = "100%"
     imgContainer.style.height = "max-content"
-    imgContainer.style.display = "flex"
-    imgContainer.style.alignItems = "center"
+    imgContainer.style.display = "inline-block"
+    // imgContainer.style.alignItems = "center"
     switch(child.align){
         case "center":
             imgContainer.style.justifyContent = "center"
