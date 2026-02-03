@@ -1,17 +1,7 @@
-
-/* 
-    BLOG RENDERING LIBRARY (Grid + Quill Edition)
-    ---------------------------------------------
-    Usage: 
-    1. Include this script.
-    2. Ensure there is a <div id="canvas"></div> in your HTML.
-    3. Call generateBlog('my-blog-slug', 'themeName');
-*/
-
 const themes = [
-    // 1. TOKYO NIGHT (Your existing theme)
+    // 1. TOKYO NIGHT 
     {
-        names: ['tokyoNight', 'tokyo_night', 'TokyoNight', 'Tokyo_night', 'Tokyo_Night'],
+        names: ['tokyoNight', 'tokyo_night', 'TokyoNight', 'Tokyo_night', 'Tokyo_Night','1'],
         canvas: {
             width: "90%",
             maxWidth: "1200px",
@@ -32,7 +22,6 @@ const themes = [
         publlishedOn: { fontWeight: '200', color: '#565f89' },
         hr: { color: '#414868' },
         text: { color: "#a9b1d6" },
-        // Quill content often uses these tags, we can style them generally
         contentStyles: `
             a { color: #7aa2f7; text-decoration: none; }
             strong, b { color: #7dcfff; font-weight: 800; }
@@ -299,7 +288,6 @@ const themes = [
             h1 { color: #39ff14; } h2 { color: #ba68c8; }
         `
     },
-    // ... (Adding others briefly for completeness, assuming standard usage based on user input list)
     // 14. PAPER
     {
         names: ['paper', 'minimal', 'classic', 'newspaper'],
@@ -329,47 +317,32 @@ const themes = [
             h1, h2 { color: #000000; }
         `
     }
-    // (Other themes from user list can be added here following same pattern)
 ];
 
-// Fallback Theme
-const defaultTheme = themes[3]; // Github Light
+const defaultTheme = themes[3]; 
 
-// --- MAIN GENERATOR FUNCTION ---
-/**
- * Fetches and renders a blog post into the #canvas element.
- * @param {string} slug - The slug of the blog to fetch
- * @param {string} themeName - The name of the theme to apply
- */
 async function generateBlog(slug, themeName) {
     console.log("Generating Blog:", slug, "Theme:", themeName);
-
-    // 1. Fetch Data
-    // Note: Adjust API URL if needed
     try {
         const response = await fetch(`https://blogify-three-weld.vercel.app/api/viewblog/${slug}`);
         if (!response.ok) throw new Error("Failed to fetch blog");
         const data = await response.json();
 
-        // 2. Resolve Theme
         let theme = defaultTheme;
         if (themeName) {
             const found = themes.find(t => t.names.some(n => n.toLowerCase() === themeName.toLowerCase()));
             if (found) theme = found;
         }
 
-        // 3. Prepare Canvas
         const canvas = document.getElementById('canvas');
         if (!canvas) {
             console.error("Canvas element not found!");
             return;
         }
-        canvas.innerHTML = ''; // Clear previous
+        canvas.innerHTML = '';
 
-        // Apply Canvas Styles
         Object.assign(canvas.style, theme.canvas);
 
-        // 4. Render Blog Content
         const article = renderBlogPost(data.blog, theme);
         canvas.append(article);
 
@@ -378,21 +351,16 @@ async function generateBlog(slug, themeName) {
     }
 }
 
-/**
- * Renders the Blog Structure
- */
 function renderBlogPost(blog, theme) {
-    // Article Container
+
     const article = document.createElement('article');
     Object.assign(article.style, theme.article);
 
-    // Title
     const title = document.createElement('h1');
     title.innerText = blog.title;
     Object.assign(title.style, theme.title);
     article.append(title);
 
-    // Date
     const dateOfCreation = new Date(blog.createdAt);
     const dateString = dateOfCreation.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const timeString = dateOfCreation.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -402,28 +370,20 @@ function renderBlogPost(blog, theme) {
     Object.assign(publishedOn.style, theme.publlishedOn);
     article.append(publishedOn);
 
-    // Separator
     const hr = document.createElement('hr');
     Object.assign(hr.style, theme.hr);
     article.append(hr);
 
-    // --- GRID LAYOUT CONTAINER ---
     const gridDiv = document.createElement('div');
     gridDiv.style.display = 'grid';
     gridDiv.style.gridTemplateColumns = 'repeat(12, 1fr)';
-
-    // CHANGE THIS: Instead of a fixed 30px, allow it to expand
-    gridDiv.style.gridAutoRows = 'min-content';
-
+    gridDiv.style.gridAutoRows = '30px';
     gridDiv.style.gap = '10px 20px';
     gridDiv.style.width = '100%';
     gridDiv.style.marginTop = '20px';
 
     article.append(gridDiv);
 
-    // Inject Theme Content Styles (Quill HTML needs CSS classes/rules)
-    // Since we are doing inline styles, we create a style tag for inner HTML content
-    // FIX: Added wrapping styles and alignment classes to prevent horizontal scroll
     if (theme.contentStyles) {
         const styleTag = document.createElement('style');
         styleTag.innerHTML = `
@@ -436,18 +396,15 @@ function renderBlogPost(blog, theme) {
             } 
             #canvas article div.ql-content * { ${theme.contentStyles} }
             
-            /* Quill Alignment Classes */
             .ql-align-center { text-align: center; }
             .ql-align-right { text-align: right; }
             .ql-align-justify { text-align: justify; }
             
-            /* Ensure images inside text wrap correctly if any */
             #canvas article div.ql-content img { max-width: 100%; height: auto; }
         `;
         document.head.appendChild(styleTag);
     }
 
-    // Render Widgets
     if (Array.isArray(blog.content)) {
         blog.content.forEach(widget => {
             gridDiv.append(createGridItem(widget, theme));
@@ -457,45 +414,41 @@ function renderBlogPost(blog, theme) {
     return article;
 }
 
-/**
- * Creates a Grid Item (Text, Image, or Video)
- */
 function createGridItem(widget, theme) {
     const { x, y, w, h } = widget.layout;
 
-    // Wrapper Div for Grid Positioning
-    // Wrapper Div for Grid Positioning
     const wrapper = document.createElement('div');
     wrapper.style.gridColumnStart = x + 1;
     wrapper.style.gridColumnEnd = `span ${w}`;
     wrapper.style.gridRowStart = y + 1;
     wrapper.style.gridRowEnd = `span ${h}`;
 
-    // CHANGE THIS: Change 'hidden' to 'visible' so the full content shows
-    wrapper.style.overflow = 'visible';
+    if (widget.type === 'text') {
+        wrapper.style.overflow = 'visible';
+    } else {
+        wrapper.style.overflow = 'hidden';
+    }
 
-    // Render Content based on Type
     if (widget.type === 'text') {
         const contentDiv = document.createElement('div');
         contentDiv.classList.add('ql-content');
         contentDiv.innerHTML = widget.content;
-
         contentDiv.style.width = '100%';
-        // Ensure height is not locked to 100% of the small grid box
         contentDiv.style.height = 'auto';
         contentDiv.style.overflow = 'visible';
 
         wrapper.append(contentDiv);
     }
     else if (widget.type === 'image') {
-        const img = document.createElement('img');
-        img.src = widget.content;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '8px';
-        wrapper.append(img);
-    }
+    const img = document.createElement('img');
+    img.src = widget.content;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    img.style.borderRadius = '8px';
+    wrapper.style.overflow = 'hidden';
+    wrapper.append(img);
+}
     else if (widget.type === 'video') {
     const videoWrapper = document.createElement('div');
 
@@ -521,13 +474,9 @@ function createGridItem(widget, theme) {
     videoWrapper.append(iframe);
     wrapper.append(videoWrapper);
 }
-
     return wrapper;
 }
 
-/**
- * Helper to get usable YouTube embed URL
- */
 function getEmbedUrl(stringUrl) {
     try {
         const url = new URL(stringUrl);
@@ -548,8 +497,6 @@ function getEmbedUrl(stringUrl) {
     }
     return stringUrl;
 }
-
-// Export for module usage, or attach to window for script usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { generateBlog };
 } else {
