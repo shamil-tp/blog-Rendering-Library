@@ -497,16 +497,30 @@ function createGridItem(widget, theme) {
         wrapper.append(img);
     }
     else if (widget.type === 'video') {
-        const iframe = document.createElement('iframe');
-        iframe.src = getEmbedUrl(widget.content);
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.border = '0';
-        iframe.style.borderRadius = '8px';
-        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-        iframe.allowFullscreen = true;
-        wrapper.append(iframe);
-    }
+    const videoWrapper = document.createElement('div');
+
+    videoWrapper.style.position = 'relative';
+    videoWrapper.style.width = '100%';
+    videoWrapper.style.aspectRatio = '16 / 9';
+    videoWrapper.style.borderRadius = '8px';
+    videoWrapper.style.overflow = 'hidden';
+    videoWrapper.style.background = '#000';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = getEmbedUrl(widget.content);
+    iframe.style.position = 'absolute';
+    iframe.style.top = '0';
+    iframe.style.left = '0';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = '0';
+
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    iframe.allowFullscreen = true;
+
+    videoWrapper.append(iframe);
+    wrapper.append(videoWrapper);
+}
 
     return wrapper;
 }
